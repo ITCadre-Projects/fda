@@ -1,2 +1,2 @@
 # fda
-Uses of FDA Open data.
+A project to leverage the openFDA datasets.
