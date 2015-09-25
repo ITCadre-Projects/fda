@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+		<script type="text/javascript">
+			google.load("visualization", "1", {packages:["corechart"]});
+			google.setOnLoadCallback(drawChart);
+			function drawChart() {
+				var data = google.visualization.arrayToDataTable([
+					['Date', 'Count'],
+					{% for data_point in data_points %}
+						['{{ data_point.filed_date }}',	{{ data_point.count }}],
+					{% endfor %}
+				]);
+
+				var options = {
+					title: 'Drug Recalls',
+					hAxis: {title: 'Date',	titleTextStyle: {color: '#333'}},
+					vAxis: {minValue: 0}
+				};
+
+				var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+				chart.draw(data, options);
+			}
+		</script>
+	</head>
+	<body>
+		<div id="chart_div" style="width: 900px; height: 500px;"></div>
+		<ul>
+		{% for data_point in data_points %}
+			<li>{{ data_point }}</li>
+		{% endfor %}
+		</ul>
+	</body>
+</html>
+
+
