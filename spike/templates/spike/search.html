@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>Search</title>
+</head>
+<body>
+
+    {% if error %}
+        <p style="color: red;">Please submit a VALID search term.</p>
+    {% endif %}
+
+    <form action="/spike/search/" method="get">
+       Drug Name:    <input type="text" name="drug_name">  </br>
+       Start Date  e.g. 20040101 :  <input type="text" name="start_date"> </br>
+       End Date e.g. 20160101 :  <input type="text" name="end_date"> </br>
+
+        <input type="submit" value="Search">
+    </form>
+</body>
+</html>
