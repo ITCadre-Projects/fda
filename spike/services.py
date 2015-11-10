@@ -28,7 +28,7 @@ def baseline_10_years(search_type = None):
 	print(search_type)
 	base = "https://api.fda.gov/drug/event.json"
 
-	if(search_type == 'All'):
+	if(not search_type or search_type == 'All'):
 		search = "receivedate:[20050101+TO+20150101]"
 	else:
 		search = 'patient.drug.openfda.pharm_class_epc:"'+search_type+'"'
