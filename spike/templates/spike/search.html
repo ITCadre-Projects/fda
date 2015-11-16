@@ -1,19 +1,88 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
-    <title>Search22222222222222</title>
+    <title>Search</title>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+    <script type="text/javascript">
+
+        google.load("visualization", "1", {packages:["corechart"]});
+        function drawChart(json) {
+            var options = {
+                title: 'Drug Recalls',
+                hAxis: {title: 'Date',	titleTextStyle: {color: '#333'}},
+                vAxis: {minValue: 0}
+            };
+
+
+
+            var dt2 = new google.visualization.DataTable();
+            dt2.addColumn('string', 'Date');
+            dt2.addColumn('number', 'Count');
+
+            $.each(json.results, function(idx, obj) {
+                //alert(obj.time);
+                //alert(obj.count);
+                dt2.addRow([obj.time,obj.count]);
+            });
+
+            var chart = new google.visualization.AreaChart(document.getElementById('result'));
+            chart.draw(dt2, options);
+        }
+
+    </script>
 </head>
 <body>
 
-    {% if error %}
-        <p style="color: red;">Please submit a VALID search term.</p>
-    {% endif %}
+{% if error %}
+<p style="color: red;">Please submit a VALID search term.</p>
+{% endif %}
 
-    <form action="/spike/search/" method="get">
-       Drug Name:    <input type="text" name="drug_name">  </br>
-       Start Date  e.g. 20040101 :  <input type="text" name="start_date"> </br>
-       End Date e.g. 20160101 :  <input type="text" name="end_date"> </br>
+<form action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
+    Drug Name: <input type="text" name="drug_name" id="drug_name">  </br>
+    Start Date e.g. 20040101 : <input type="text" name="start_date" id="start_date"> </br>
+    End Date e.g. 20160101 : <input type="text" name="end_date" id="end_date"> </br>
 
-        <input type="submit" value="Search">
-    </form>
+    <input type="submit" value="Search">
+</form>
+
+<div id="result"></div>
+<script>
+ // Submit post on submit
+    $('#searchForm').on('submit', function(event){
+        event.preventDefault();
+        console.log("form submitted!")  // sanity check
+        create_post();
+    });
+
+function create_post() {
+  console.log("create post is working!") // sanity check
+    $.ajax({
+        url : "/spike/search/", // the endpoint
+        type : "POST", // http method
+        dataType: "json",
+            data : {
+                drug_name :  $('#drug_name').val(),
+                start_date :  $('#start_date').val(),
+                end_date :  $('#end_date').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+            success : function(json) {
+                drawChart(json);
+            },
+
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $('#result').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+            }
+    });
+
+};
+
+
+</script>
+
 </body>
 </html>
