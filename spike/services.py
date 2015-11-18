@@ -45,23 +45,24 @@ def baseline_10_years(search_type=None):
     return points
 
 
-def search_by_product(product, start_date, end_date):
-    base = "https://api.fda.gov/drug/event.json"
-    search = 'patient.drug.medicinalproduct:{}+AND+receivedate:[{}+TO+{}]+AND+primarysourcecountry:ca'.format(product,
-                                                                                                              start_date,
-                                                                                                              end_date)
-    count = "receivedate"
-    url = "{}?search={}&count={}".format(base, search, count)
-    print(url)
-    data = get_json(url)
+def search_by_product(products, start_date, end_date):
+    my_products = products.split(',')
 
-    print(data)
-    # points = []
-    # if data is None:
-    #     print(data)
-    # else:
-    #     for result in data["results"]:
-    #         print(result)
-            # point = DataPoint(filed_date=result["time"], drug_name="All", count=result["count"])
-            # points.append(point)
-    return data
+    base = "https://api.fda.gov/drug/event.json"
+
+    my_data_dict = {'final':[]}
+    my_data = []
+    for product in my_products:
+        print(product)
+        search = 'patient.drug.medicinalproduct:{}+AND+receivedate:[{}+TO+{}]+AND+primarysourcecountry:ca'.format(
+            product,
+            start_date,
+            end_date)
+        count = "receivedate"
+        url = "{}?search={}&count={}".format(base, search, count)
+        # print(url)
+        data = get_json(url)
+        # print(data)
+        my_data_dict['final'].append(data)
+
+    return my_data_dict

@@ -6,27 +6,32 @@
 
     <script type="text/javascript">
 
-        google.load("visualization", "1", {packages:["corechart"]});
+       // google.load("visualization", "1", {packages:["columnchart"]});
+       google.load('visualization', '1', {packages: ['corechart', 'bar']});
         function drawChart(json) {
-            var options = {
-                title: 'Drug Recalls',
-                hAxis: {title: 'Date',	titleTextStyle: {color: '#333'}},
-                vAxis: {minValue: 0}
-            };
 
-
-
+            var options = {height: 240, is3D: true, title: 'Drug Recalls'};
             var dt2 = new google.visualization.DataTable();
-            dt2.addColumn('string', 'Date');
-            dt2.addColumn('number', 'Count');
+            dt2.addColumn('date', 'Date');
+             for ( i = 0; i < json.final.length; i++){
+                dt2.addColumn('number', 'Count'+i);
+             }
+            $.each(json.final, function(a,p) {
+                $.each(p.results, function(idx, obj) {
+                   myrow = [];
+                    myrow.push(new Date(obj.time.substring(0,4)+'-'+obj.time.substring(4,6)+'-'+obj.time.substring(6,8)));
+                    for ( i = 0; i < json.final.length; i++){
+                        if(i== a)
+                            myrow.push(obj.count);
+                        else
+                            myrow.push(null);
+                    }
+                    dt2.addRow(myrow);
 
-            $.each(json.results, function(idx, obj) {
-                //alert(obj.time);
-                //alert(obj.count);
-                dt2.addRow([obj.time,obj.count]);
+                });
             });
-
-            var chart = new google.visualization.AreaChart(document.getElementById('result'));
+            //var chart = new google.visualization.AreaChart(document.getElementById('result'));
+            var chart = new google.visualization.ColumnChart(document.getElementById('result'));
             chart.draw(dt2, options);
         }
 
@@ -34,10 +39,12 @@
 </head>
 <body>
 
+<div id="error">
 {% if error %}
+
 <p style="color: red;">Please submit a VALID search term.</p>
 {% endif %}
-
+</div>
 <form action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
     Drug Name: <input type="text" name="drug_name" id="drug_name">  </br>
     Start Date e.g. 20040101 : <input type="text" name="start_date" id="start_date"> </br>
@@ -68,12 +75,13 @@ function create_post() {
                 csrfmiddlewaretoken: '{{ csrf_token }}'
                 },
             success : function(json) {
-                drawChart(json);
+              drawChart(json);
+              // alert(json);
             },
 
             // handle a non-successful response
             error : function(xhr,errmsg,err) {
-                $('#result').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                $('#error').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
                     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
                 console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
             }
