@@ -49,9 +49,4 @@ def search(request):
 
 
 def get_drug_names(request):
-    count = '20'
-    if request.method == 'GET':
-     count = '20'
-    elif request.method == 'POST':
-     count = '20'
-    return JsonResponse(retreive_drug_names(count))
+    return JsonResponse(retreive_drug_names())
