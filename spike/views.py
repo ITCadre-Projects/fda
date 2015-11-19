@@ -2,6 +2,7 @@ from django.shortcuts import render
 from .models import DataPoint
 from .services import baseline_10_years
 from .services import search_by_product
+from .services import retreive_drug_names
 from django.http import *
 from .forms import PostForm
 
@@ -45,3 +46,12 @@ def search(request):
             return render(request, 'spike/search.html', {'error': True})
     else:
         return render(request, 'spike/search.html', {'error': True})
+
+
+def get_drug_names(request):
+    count = '20'
+    if request.method == 'GET':
+     count = '20'
+    elif request.method == 'POST':
+     count = '20'
+    return JsonResponse(retreive_drug_names(count))

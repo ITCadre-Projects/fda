@@ -10,7 +10,7 @@
        google.load('visualization', '1', {packages: ['corechart', 'bar']});
         function drawChart(json) {
 
-            var options = {height: 240, is3D: true, title: 'Drug Recalls'};
+            var options = {height: 240, is3D: true, title: 'Drug Report'};
             var dt2 = new google.visualization.DataTable();
             dt2.addColumn('date', 'Date');
              for ( i = 0; i < json.final.length; i++){

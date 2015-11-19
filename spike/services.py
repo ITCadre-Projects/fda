@@ -50,7 +50,7 @@ def search_by_product(products, start_date, end_date):
 
     base = "https://api.fda.gov/drug/event.json"
 
-    my_data_dict = {'final':[]}
+    my_data_dict = {'final': []}
     my_data = []
     for product in my_products:
         print(product)
@@ -66,3 +66,20 @@ def search_by_product(products, start_date, end_date):
         my_data_dict['final'].append(data)
 
     return my_data_dict
+
+
+def retreive_drug_names(count=None):
+    if count:
+        my_count = count
+    else:
+        my_count = 20
+
+    base = "https://api.fda.gov/drug/event.json"
+    search = ""
+    pcount = "medicinalproduct"
+
+    url = "{}?search={}&count={}&limit={}".format(base, search, pcount, my_count)
+
+    print(url)
+    data = get_json(url)
+    return data
