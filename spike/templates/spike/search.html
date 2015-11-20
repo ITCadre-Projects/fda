@@ -11,7 +11,7 @@
        // google.load("visualization", "1", {packages:["columnchart"]});
        google.load('visualization', '1', {packages: ['corechart', 'bar']});
         function drawChart(json) {
-            var options = {height: 240, is3D: true, title: 'Drug Report'};
+            var options = {height: 400, is3D: true, title: 'Drug Report'};
             var dt2 = new google.visualization.DataTable();
             dt2.addColumn('date', 'Date');
             console.log(json.final);
