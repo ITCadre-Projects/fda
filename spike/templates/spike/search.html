@@ -3,18 +3,23 @@
     <title>Search</title>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="https://bootswatch.com/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
 
     <script type="text/javascript">
 
        // google.load("visualization", "1", {packages:["columnchart"]});
        google.load('visualization', '1', {packages: ['corechart', 'bar']});
         function drawChart(json) {
-
             var options = {height: 240, is3D: true, title: 'Drug Report'};
             var dt2 = new google.visualization.DataTable();
             dt2.addColumn('date', 'Date');
+            console.log(json.final);
+            var d = $("#druglist .btn-success .drug_name");
+            console.log(d);
              for ( i = 0; i < json.final.length; i++){
-                dt2.addColumn('number', 'Count'+i);
+                j=i+1;
+                dt2.addColumn('number', $(d[i]).text());
              }
             $.each(json.final, function(a,p) {
                 $.each(p.results, function(idx, obj) {
@@ -34,34 +39,111 @@
             var chart = new google.visualization.ColumnChart(document.getElementById('result'));
             chart.draw(dt2, options);
         }
-
+        
     </script>
+    <link rel="stylesheet" type="text/css" href="https://bootswatch.com/flatly/bootstrap.min.css">
+    <style>
+     .btn-group-vertical {
+
+        display:block;
+     }
+        .btn-group-vertical .btn{
+            margin-bottom:5px;
+            text-align: left;
+        }
+
+        .btn .drug_name {
+            padding-left:30px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+<h1>Top Drug Interactions</h1>
+<div class="bs-docs-section">
+<div class="row">
+    <div id="drugs" class="col-lg-2">
+    Top 20 Drug Interactions in dataset:
+        <div id="drugList" class="btn-group-vertical">
+        </div>
 
-<div id="error">
-{% if error %}
+    </div>
 
-<p style="color: red;">Please submit a VALID search term.</p>
-{% endif %}
+    <div id="drugs" class="col-lg-10">
+
+    <form action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
+        <input type="hidden" id="drug_name" name="drug_name" value="Tylenol">
+        Start Date e.g. 20040101 : <input type="text" name="start_date" id="start_date" value="20150101"> </br>
+        End Date e.g. 20160101 : <input type="text" name="end_date" id="end_date" value="20160101"> </br>
+
+        <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
+        <div id="error">
+            {% if error %}
+
+            <p style="color: red;">Please submit a VALID search term.</p>
+            {% endif %}
+        </div>
+     <div id="result" style="clear:both;"></div>
+
+    </form>
 </div>
-<form action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
-    Drug Name: <input type="text" name="drug_name" id="drug_name">  </br>
-    Start Date e.g. 20040101 : <input type="text" name="start_date" id="start_date"> </br>
-    End Date e.g. 20160101 : <input type="text" name="end_date" id="end_date"> </br>
-
-    <input type="submit" value="Search">
-</form>
-
-<div id="result"></div>
+</div>
 <script>
+$(document).ready(function(){
+
  // Submit post on submit
     $('#searchForm').on('submit', function(event){
         event.preventDefault();
         console.log("form submitted!")  // sanity check
         create_post();
     });
+    $("#submitForm").click(function(){
+        
+        $('#searchForm').submit();
+    })
+    get_drugs();
+});
+function swapDrug(elem) {
+    $(elem).toggleClass("btn-success .btn-default").find("> span").toggleClass("glyphicon-minus glyphicon-plus");
+}
+function graph_drugs(){
+    var drugs = [];
+    $("#druglist .btn-success .drug_name").each(function(){
+        drugs.push($(this).text());
+    })
+    $("#drug_name").val(drugs.toString());
+    $("#searchForm").submit();
+}
+function get_drugs() {
+    $.ajax({
+        url : "/spike/get-drug-names/",
+        type: "GET",
+        dataType: "json",
+        success :function(json) {
+            console.log("number of results: " + json.results.length); //number of drugs
+            $.each(json.results, function(i,result){
+                var href = $('<a>', {href:'javascript:void(0)',id:result.term, 'class':'btn btn-default btn-sm'});
+                var glyph = $('<span>', {'class':'glyphicon glyphicon-minus','aria-hidden':'true'});
+                var drugSpan = $('<span>', {'class':'drug_name'});
+                $("#drugList").append(href.append(glyph.append(drugSpan.append(result.term))));
+            })
 
+            for (i=0;i<6;i++) {
+                swapDrug($("#druglist a:nth-child("+i+")"));
+            }
+
+            $("#drugList a").click(function(e){
+                swapDrug($(this));
+                graph_drugs();
+            })
+
+            graph_drugs();
+        }
+    })
+}
+function parseDrugs(json_obj){
+    //alert(json_obj[0].term)
+}
 function create_post() {
   console.log("create post is working!") // sanity check
     $.ajax({
@@ -69,7 +151,7 @@ function create_post() {
         type : "POST", // http method
         dataType: "json",
             data : {
-                drug_name :  $('#drug_name').val(),
+                drug_name :  $("#drug_name").val(),
                 start_date :  $('#start_date').val(),
                 end_date :  $('#end_date').val(),
                 csrfmiddlewaretoken: '{{ csrf_token }}'
