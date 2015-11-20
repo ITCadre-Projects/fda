@@ -4,6 +4,10 @@
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="https://bootswatch.com/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<!-- Include Date Range Picker -->
+<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
 
 
     <script type="text/javascript">
@@ -11,29 +15,35 @@
        // google.load("visualization", "1", {packages:["columnchart"]});
        google.load('visualization', '1', {packages: ['corechart', 'bar']});
         function drawChart(json) {
+            $("#result").html(" ");
+            $("#result_errors").html("");
             var options = {height: 400, is3D: true, title: 'Drug Report'};
             var dt2 = new google.visualization.DataTable();
             dt2.addColumn('date', 'Date');
             console.log(json.final);
-            var d = $("#druglist .btn-success .drug_name");
-            console.log(d);
-             for ( i = 0; i < json.final.length; i++){
-                j=i+1;
-                dt2.addColumn('number', $(d[i]).text());
-             }
+            var d = $("#druglist .btn-success .drug_name"); //list of drugs that are Clicked for Legend
             $.each(json.final, function(a,p) {
-                $.each(p.results, function(idx, obj) {
-                   myrow = [];
-                    myrow.push(new Date(obj.time.substring(0,4)+'-'+obj.time.substring(4,6)+'-'+obj.time.substring(6,8)));
-                    for ( i = 0; i < json.final.length; i++){
-                        if(i== a)
-                            myrow.push(obj.count);
-                        else
-                            myrow.push(null);
-                    }
-                    dt2.addRow(myrow);
+                if(p){
+                    dt2.addColumn('number', $(d[a]).text());
+                }
+             });
+            $.each(json.final, function(a,p) {
+                if(p){
+                    $.each(p.results, function(idx, obj) {
+                       myrow = [];
+                        myrow.push(new Date(obj.time.substring(0,4)+'-'+obj.time.substring(4,6)+'-'+obj.time.substring(6,8)));
+                        for ( i = 0; i < json.final.length; i++){
+                            if(i== a)
+                                myrow.push(obj.count);
+                            else
+                                myrow.push(null);
+                        }
+                        dt2.addRow(myrow);
 
-                });
+                    });
+                } else {
+                    $("#result_errors").append("<p class='text-danger'><b>"+$(d[a]).text() + "</b> was not found in Date Range<p>")
+                }
             });
             //var chart = new google.visualization.AreaChart(document.getElementById('result'));
             var chart = new google.visualization.ColumnChart(document.getElementById('result'));
@@ -59,11 +69,12 @@
     </style>
 </head>
 <body>
-<h1>Top Drug Interactions</h1>
+<div class="container">
+<h1 style="text-align:center;">Top Drug Interactions</h1>
 <div class="bs-docs-section">
 <div class="row">
     <div id="drugs" class="col-lg-2">
-    Top 20 Drug Interactions in dataset:
+    Top 20 Drugs Reported:
         <div id="drugList" class="btn-group-vertical">
         </div>
 
@@ -71,21 +82,37 @@
 
     <div id="drugs" class="col-lg-10">
 
-    <form action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
-        <input type="hidden" id="drug_name" name="drug_name" value="Tylenol">
-        Start Date e.g. 20040101 : <input type="text" name="start_date" id="start_date" value="20150101"> </br>
-        End Date e.g. 20160101 : <input type="text" name="end_date" id="end_date" value="20160101"> </br>
+            <form class="form-horizontal" action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
+              <fieldset>
+                <div class="form-group">
+                    <input type="hidden" id="drug_name" name="drug_name" value="Tylenol">
+                    <input type="hidden" name="start_date" id="start_date" value="20140101">
 
-        <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
-        <div id="error">
-            {% if error %}
+                    <input type="hidden" name="end_date" id="end_date" value="20150101">
+                    <label for="dateRange" class="col-lg-2 control-label">Date Range:</label>
+                    <div class="col-lg-3">
+                        <input type="text" class="form-control" name="dateRange" id="dateRange" value="">
+                        
+                    </div>
+                </div>
 
-            <p style="color: red;">Please submit a VALID search term.</p>
-            {% endif %}
-        </div>
-     <div id="result" style="clear:both;"></div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
+                        <div id="error">
+                            {% if error %}
 
-    </form>
+                            <p style="color: red;">Please submit a VALID search.</p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+              </fieldset>
+            </form> 
+            <div id="result_errors"></div>
+            <div id="result"></div>
+</div>
 </div>
 </div>
 <script>
@@ -97,10 +124,37 @@ $(document).ready(function(){
         console.log("form submitted!")  // sanity check
         create_post();
     });
+
     $("#submitForm").click(function(){
         
         $('#searchForm').submit();
     })
+    
+    //instantiate dateRange Picker
+    $('#dateRange').daterangepicker({
+        "showDropdowns": true,
+        "ranges": {
+            
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'This Year' : [moment().startOf('year'), moment().endOf('year')],
+            'Last Year' : [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+        },
+        "parentEl": "dateRange",
+        "startDate": "01/01/2015",
+        "endDate": "12/31/2015"
+    }, function(start, end, label) {
+      console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+        $("#start_date").val(start.format('YYYYMMDD'));
+        $("#end_date").val(end.format('YYYYMMDD'));
+        console.log($("#start_date").val());
+        console.log($("#end_date").val());
+        graph_drugs();
+    });
+    
+
     get_drugs();
 });
 function swapDrug(elem) {
@@ -157,6 +211,7 @@ function create_post() {
                 csrfmiddlewaretoken: '{{ csrf_token }}'
                 },
             success : function(json) {
+
               drawChart(json);
               // alert(json);
             },
