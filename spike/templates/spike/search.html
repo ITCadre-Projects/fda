@@ -66,6 +66,14 @@
             padding-left:30px;
             font-weight: bold;
         }
+
+        #showHideDrugs {
+            color:#000033;
+            text-align: center;
+        }
+        #showHideDrugs:hover {
+            font-weight:bold;
+        }
     </style>
 </head>
 <body>
@@ -77,8 +85,11 @@
     Top 20 Drugs Reported:
         <div id="drugList" class="btn-group-vertical">
         </div>
-
+    
+    <div id="showHideDrugs">...See More...</div>
+    
     </div>
+
 
     <div id="drugs" class="col-lg-10">
 
@@ -128,8 +139,9 @@ $(document).ready(function(){
     $("#submitForm").click(function(){
         
         $('#searchForm').submit();
-    })
+    });
     
+
     //instantiate dateRange Picker
     $('#dateRange').daterangepicker({
         "showDropdowns": true,
@@ -192,12 +204,39 @@ function get_drugs() {
             })
 
             graph_drugs();
+
+            collapseList();
         }
     })
 }
 function parseDrugs(json_obj){
     //alert(json_obj[0].term)
 }
+
+function collapseList(){
+     //show/hide drug toggle
+    var $div = $("#drugList"),
+        $sw = $("#showHideDrugs"),
+        toggleState = true;
+
+    $("#drugList").each(function() {
+        $.data(this, "realHeight", $(this).height());
+    }).css({overflow:'hidden',height:'195px'});
+
+    $sw.click(function() {
+        if(toggleState) {
+            $div.animate({height:$div.data("realHeight")},600);
+            $("#showHideDrugs").html("...See Less...");
+            
+        } else {
+            $div.animate({height:'195px'},600);
+            $sw.html("..See More...");
+          
+        }
+        toggleState = !toggleState
+    });
+}
+
 function create_post() {
   console.log("create post is working!") // sanity check
     $.ajax({
