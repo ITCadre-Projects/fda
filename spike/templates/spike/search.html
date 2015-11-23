@@ -8,7 +8,7 @@
 <!-- Include Date Range Picker -->
 <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
 <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
-
+<link rel="stylesheet" href="http://css-spinners.com/css/spinners.css" type="text/css">
 
     <script type="text/javascript">
 
@@ -48,6 +48,8 @@
             //var chart = new google.visualization.AreaChart(document.getElementById('result'));
             var chart = new google.visualization.ColumnChart(document.getElementById('result'));
             chart.draw(dt2, options);
+             $("#loading").hide();
+            $("#result").html();
         }
         
     </script>
@@ -74,15 +76,42 @@
         #showHideDrugs:hover {
             font-weight:bold;
         }
+
+.add-on .input-group-btn > .btn {
+  /*border-left-width:0;left:-2px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+}
+/* stop the glowing blue shadow */
+.add-on .form-control:focus {
+ box-shadow:none;
+ -webkit-box-shadow:none; 
+ border-color:#cccccc; 
+}
+
+
+#drugList {
+    margin-top:10px;
+}
     </style>
+
 </head>
 <body>
 <div class="container">
 <h1 style="text-align:center;">Top Drug Interactions</h1>
 <div class="bs-docs-section">
 <div class="row">
-    <div id="drugs" class="col-lg-2">
-    Top 20 Drugs Reported:
+    <div id="drugs" class="col-md-2">
+    Top 20 Drugs Reported: 
+    <div class="input-group add-on">
+      <input type="text" class="form-control" placeholder="Search Drugs" name="srch-term" id="seachDrugName" style="padding-left:5px;">
+      <div class="input-group-btn">
+        <button class="form-control btn btn-default" type="submit"><i class="glyphicon glyphicon-search" id="searchDrug"></i></button>
+      </div>
+    </div>
+
+           
+
         <div id="drugList" class="btn-group-vertical">
         </div>
     
@@ -107,21 +136,25 @@
                     </div>
                 </div>
 
+
                 <div class="form-group">
                     <div class="col-lg-10 col-lg-offset-2">
                         <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
                         <div id="error">
-                            {% if error %}
-
-                            <p style="color: red;">Please submit a VALID search.</p>
-                            {% endif %}
+                            
                         </div>
 
                     </div>
                 </div>
               </fieldset>
-            </form> 
-            <div id="result_errors"></div>
+            </form>
+            <div style="text-align:center; margin-top:50px;">
+                <div id="loading" class="spinner-loader">
+                  Loading…
+                </div>
+            </div>
+            <div id="result_errors" class="text-danger"></div>
+            
             <div id="result"></div>
 </div>
 </div>
@@ -141,6 +174,9 @@ $(document).ready(function(){
         $('#searchForm').submit();
     });
     
+    $("#searchDrug").click(function(){
+        searchDrug();
+    })
 
     //instantiate dateRange Picker
     $('#dateRange').daterangepicker({
@@ -172,7 +208,11 @@ $(document).ready(function(){
 function swapDrug(elem) {
     $(elem).toggleClass("btn-success .btn-default").find("> span").toggleClass("glyphicon-minus glyphicon-plus");
 }
+
 function graph_drugs(){
+    $("#loading").show();
+    $("#result").html("");
+    $("#result_errors").html("");
     var drugs = [];
     $("#druglist .btn-success .drug_name").each(function(){
         drugs.push($(this).text());
@@ -180,6 +220,7 @@ function graph_drugs(){
     $("#drug_name").val(drugs.toString());
     $("#searchForm").submit();
 }
+
 function get_drugs() {
     $.ajax({
         url : "/spike/get-drug-names/",
@@ -237,8 +278,42 @@ function collapseList(){
     });
 }
 
+function searchDrug() {
+    $drugName = $("#seachDrugName").val();
+    $.ajax({
+        url : "/spike/search/",
+        type: "POST",
+        dataType: "json",
+        data: {
+            drug_name : $drugName,
+            start_date :  $('#start_date').val(),
+            end_date :  $('#end_date').val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+        success :function(json) {
+            //$("#result_errors").html("<span style='color:300'>" + $drugName+" was not found in the dataset</span>");
+            if(json.final[0]) {
+                //console.log(json.final[0].results);
+                var href = $('<a>', {href:'javascript:void(0)',id:$drugName, 'class':'btn btn-default btn-success btn-sm'});
+                var glyph = $('<span>', {'class':'glyphicon glyphicon-plus','aria-hidden':'true'});
+                var drugSpan = $('<span>', {'class':'drug_name'});
+                $("#drugList").prepend(href.append(glyph.append(drugSpan.append($drugName)))); 
+                
+                $("#"+$drugName).click(function(e){
+                    swapDrug($(this));
+                    graph_drugs();
+                })
+            
+                graph_drugs();
+            } else {
+                $("#result_errors").html("There is no Drug " + $drugName + " in the data set.");
+            }
+        },
+        
+    })
+}
+
 function create_post() {
-  console.log("create post is working!") // sanity check
     $.ajax({
         url : "/spike/search/", // the endpoint
         type : "POST", // http method
