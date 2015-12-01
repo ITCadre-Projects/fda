@@ -5,6 +5,7 @@ from .services import search_by_product
 from .services import retreive_drug_names
 from django.http import *
 from .forms import PostForm
+from rest_framework.decorators import api_view
 
 
 def index(request):
@@ -22,31 +23,30 @@ def fda(request):
 def search_form(request):
     return render(request, 'spike/search.html')
 
-
+@api_view(['GET', 'POST'])
 def search(request):
-    print('hey man')
 
     if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            drug_name = request.POST.get('drug_name')
-            start_date = request.POST.get('start_date')
-            end_date = request.POST.get('end_date')
-        else:
-            print('form is bad')
+       form = PostForm(request.POST)
+       if form.is_valid():
+             drug_name = request.POST.get('drug_name')
+             start_date = request.POST.get('start_date')
+             end_date = request.POST.get('end_date')
+    else:
+        drug_name = request.query_params.get('drug_name')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
 
-        # print(drug_name)
-        data_points = search_by_product(drug_name, start_date, end_date)
-        print("--------------")
-        print(data_points)
-        if data_points:
-            return JsonResponse(data_points)
-            # return HttpResponse(data_points, content_type="application/json")
-        else:
-            return render(request, 'spike/search.html', {'error': True})
+
+    data_points = search_by_product(drug_name, start_date, end_date)
+
+    if data_points:
+        return JsonResponse(data_points)
+        # return HttpResponse(data_points, content_type="application/json")
     else:
         return render(request, 'spike/search.html', {'error': True})
 
-
+@api_view(['GET', 'POST'])
 def get_drug_names(request):
-    return JsonResponse(retreive_drug_names())
+
+    return JsonResponse(retreive_drug_names(request.query_params.get('count')))
