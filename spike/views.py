@@ -23,20 +23,19 @@ def fda(request):
 def search_form(request):
     return render(request, 'spike/search.html')
 
+
 @api_view(['GET', 'POST'])
 def search(request):
-
     if request.method == 'POST':
-       form = PostForm(request.POST)
-       if form.is_valid():
-             drug_name = request.POST.get('drug_name')
-             start_date = request.POST.get('start_date')
-             end_date = request.POST.get('end_date')
+        form = PostForm(request.POST)
+        if form.is_valid():
+            drug_name = request.POST.get('drug_name')
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
     else:
         drug_name = request.query_params.get('drug_name')
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
-
 
     data_points = search_by_product(drug_name, start_date, end_date)
 
@@ -46,7 +45,7 @@ def search(request):
     else:
         return render(request, 'spike/search.html', {'error': True})
 
+
 @api_view(['GET', 'POST'])
 def get_drug_names(request):
-
     return JsonResponse(retreive_drug_names(request.query_params.get('count')))
