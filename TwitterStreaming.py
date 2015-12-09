@@ -45,7 +45,7 @@ class StdOutListener(StreamListener):
 
 if __name__ == '__main__':
 
-    drugs = retreive_drug_names(50)
+    drugs = retreive_drug_names(5)
 
     mydrugs = []
     for result in drugs["results"]:
