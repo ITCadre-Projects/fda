@@ -2,8 +2,9 @@ import urllib.request
 import urllib.error
 from urllib.parse import urlparse
 from .classes import DataPoint
+from .models import DataRecord
 import json
-
+import datetime
 
 def get_json(url, username=None, password=None):
     try:
@@ -51,18 +52,14 @@ def search_by_product(products, start_date, end_date):
     base = "https://api.fda.gov/drug/event.json"
 
     my_data_dict = {'final': []}
-    my_data = []
     for product in my_products:
-        print(product)
         search = 'patient.drug.medicinalproduct:{}+AND+receivedate:[{}+TO+{}]+AND+primarysourcecountry:ca'.format(
             product,
             start_date,
             end_date)
         count = "receivedate"
         url = "{}?search={}&count={}".format(base, search, count)
-        # print(url)
         data = get_json(url)
-        # print(data)
         my_data_dict['final'].append(data)
 
     return my_data_dict
@@ -83,3 +80,23 @@ def retreive_drug_names(count=None):
     print(url)
     data = get_json(url)
     return data
+
+def retrieve_mentioned_event_twitter(drug_name, start_date = None, end_date = None, count = None):
+
+    events = DataRecord.objects.filter(data_src__iexact="twitter")
+    if drug_name:
+        events = events.filter(raw_data__icontains=drug_name)
+    if start_date:
+        sdate = datetime.datetime.strptime(start_date,'%Y%m%d')
+        events = events.filter(captured_date__gte=sdate)
+    if end_date:
+        edate = datetime.datetime.strptime(end_date,'%Y%m%d')
+        events = events.filter(captured_date__lte=edate)
+    if count:
+        mycount = int(count)
+    else:
+        mycount = 10
+
+    if len(events) > mycount:
+        events = events[:mycount]
+    return events
