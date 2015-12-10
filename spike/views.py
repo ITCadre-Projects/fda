@@ -62,7 +62,7 @@ def search_mentioned_events_twitter(request):
 
     my_data_dict = {'final': []}
     for event in events:
-        mye = {"raw_data": event.raw_data, "captured_date": event.captured_date}
+        mye = {"raw_data": event.raw_data, "submitted_date": event.submitted_date}
         my_data_dict["final"].append(mye)
 
     return JsonResponse(my_data_dict, safe=False)

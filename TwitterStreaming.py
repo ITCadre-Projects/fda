@@ -25,15 +25,12 @@ class StdOutListener(StreamListener):
 
     def on_data(self, data):
         # print(data)
-        if "text" in data and "source" in data and "created_at" in data and "utc_offset" in data:
+        if "text" in data and "source" in data :
             tweet = data.split(',"text":"')[1].split('","source')[0]
-            tweettime = data.split(',"created_at":"')[1].split('","utc_offset')[0]
-            cdate = datetime.datetime.strptime(tweettime,'%a %b %d %H:%M:%S %z %Y')
             today = datetime.datetime.today()
-            d = DataRecord(captured_date=cdate, raw_data=tweet, data_src='twitter', submitted_date=today)
+            d = DataRecord(raw_data=tweet, data_src='twitter', submitted_date=today)
             d.save()
             print(tweet)
-            print(tweettime)
             print('data saved')
         else:
             print('bad data')

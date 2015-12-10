@@ -88,10 +88,10 @@ def retrieve_mentioned_event_twitter(drug_name, start_date = None, end_date = No
         events = events.filter(raw_data__icontains=drug_name)
     if start_date:
         sdate = datetime.datetime.strptime(start_date,'%Y%m%d')
-        events = events.filter(captured_date__gte=sdate)
+        events = events.filter(submitted_date__gte=sdate)
     if end_date:
         edate = datetime.datetime.strptime(end_date,'%Y%m%d')
-        events = events.filter(captured_date__lte=edate)
+        events = events.filter(submitted_date__lte=edate)
     if count:
         mycount = int(count)
     else:
