@@ -1,10 +1,12 @@
-import urllib.request
+import datetime
+import json
 import urllib.error
+import urllib.request
 from urllib.parse import urlparse
+
 from .classes import DataPoint
 from .models import DataRecord
-import json
-import datetime
+
 
 def get_json(url, username=None, password=None):
     try:
@@ -53,15 +55,17 @@ def search_by_product(products, start_date, end_date):
 
     my_data_dict = {'final': []}
     for product in my_products:
+        my_drug_dict = {'name': product, 'data': {}}
         search = 'patient.drug.medicinalproduct:{}+AND+receivedate:[{}+TO+{}]+AND+primarysourcecountry:ca'.format(
-            product,
-            start_date,
-            end_date)
+                product,
+                start_date,
+                end_date)
         count = "receivedate"
         url = "{}?search={}&count={}".format(base, search, count)
         data = get_json(url)
-        my_data_dict['final'].append(data)
-
+        if data:
+            my_drug_dict["data"] = data
+            my_data_dict['final'].append(my_drug_dict)
     return my_data_dict
 
 
@@ -81,22 +85,42 @@ def retreive_drug_names(count=None):
     data = get_json(url)
     return data
 
-def retrieve_mentioned_event_twitter(drug_name, start_date = None, end_date = None, count = None):
 
+def retrieve_mentioned_event_twitter(drug_name, start_date=None, end_date=None, limit=None):
+    points = []
     events = DataRecord.objects.filter(data_src__iexact="twitter")
-    if drug_name:
-        events = events.filter(raw_data__icontains=drug_name)
-    if start_date:
-        sdate = datetime.datetime.strptime(start_date,'%Y%m%d')
-        events = events.filter(submitted_date__gte=sdate)
-    if end_date:
-        edate = datetime.datetime.strptime(end_date,'%Y%m%d')
-        events = events.filter(submitted_date__lte=edate)
-    if count:
-        mycount = int(count)
+    if limit:
+        mylimit = int(limit)
     else:
-        mycount = 10
+        mylimit = 10
 
-    if len(events) > mycount:
-        events = events[:mycount]
-    return events
+    if events and len(events) > 0:
+        if drug_name:
+            events = events.filter(raw_data__icontains=drug_name)
+        if start_date:
+            sdate = datetime.datetime.strptime(start_date, '%Y%m%d')
+            events = events.filter(submitted_date__gte=sdate)
+        if end_date:
+            edate = datetime.datetime.strptime(end_date, '%Y%m%d')
+            events = events.filter(submitted_date__lte=edate)
+
+        if len(events) > 0:
+            pre_date = events[0].submitted_date
+            mycount = 0
+            index = 0
+            for event in events:
+                if index >= 1 and event.submitted_date > pre_date:
+                    point = DataPoint(filed_date=pre_date, drug_name=drug_name, count=mycount)
+                    points.append(point)
+                    mycount = 1
+                    pre_date = event.submitted_date
+                elif index == (len(events) - 1):
+                    point = DataPoint(filed_date=event.submitted_date, drug_name=drug_name, count=mycount + 1)
+                    points.append(point)
+                else:
+                    mycount = mycount + 1
+                index = index + 1
+
+        if len(points) > mylimit:
+            points = points[:mylimit]
+    return points

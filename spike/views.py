@@ -7,6 +7,8 @@ from .services import baseline_10_years
 from .services import retreive_drug_names
 from .services import search_by_product
 from .services import retrieve_mentioned_event_twitter
+import json
+
 
 def index(request):
     data_points = DataPoint.objects.order_by('filed_date')
@@ -32,16 +34,39 @@ def search(request):
             drug_name = request.POST.get('drug_name')
             start_date = request.POST.get('start_date')
             end_date = request.POST.get('end_date')
+            by_date = request.POST.get('by_date')
+            three_d = request.POST.get('3d')
+            interval = request.POST.get('interval')
+
     else:
         drug_name = request.query_params.get('drug_name')
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
+        by_date = request.query_params.get('by_date')
+        three_d = request.query_params.get('3d')
+        interval = request.query_params.get('interval')
 
     data_points = search_by_product(drug_name, start_date, end_date)
 
     if data_points:
-        return JsonResponse(data_points)
-        # return HttpResponse(data_points, content_type="application/json")
+        if by_date and by_date == "true":
+            result = {"hello": "waipang"}
+
+            return JsonResponse(result)
+        elif three_d and three_d == "true" and interval and interval in ("byweek","bymonth","byyear"):
+
+            if interval == "byweek":
+                idays = 7
+            elif interval == "bymonth":
+                idays = 30
+            else:
+                idays = 365
+
+            result = {"hello2": "waipang"}
+
+            return JsonResponse(result)
+        else:
+            return JsonResponse(data_points)
     else:
         return render(request, 'spike/search.html', {'error': True})
 
@@ -56,13 +81,17 @@ def search_mentioned_events_twitter(request):
     drug_name = request.query_params.get('drug_name')
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
-    count = request.query_params.get('count')
-
-    events = retrieve_mentioned_event_twitter(drug_name, start_date, end_date, count)
+    limit = request.query_params.get('limit')
 
     my_data_dict = {'final': []}
-    for event in events:
-        mye = {"raw_data": event.raw_data, "submitted_date": event.submitted_date}
-        my_data_dict["final"].append(mye)
+    my_drugs = drug_name.split(',')
 
+    for my_drug in my_drugs:
+        my_drug_dict = {'name':my_drug, 'result': []}
+        events = retrieve_mentioned_event_twitter(my_drug, start_date, end_date, limit)
+        for event in events:
+            mye = {"count": event.count, "submitted_date": event.filed_date}
+            my_drug_dict['result'].append(mye)
+
+        my_data_dict['final'].append(my_drug_dict)
     return JsonResponse(my_data_dict, safe=False)
