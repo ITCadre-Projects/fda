@@ -22,11 +22,16 @@
             dt2.addColumn('date', 'Date');
             console.log(json.final);
             var d = $("#druglist .btn-success .drug_name"); //list of drugs that are Clicked for Legend
+            nocols= 0;
             $.each(json.final, function(a,p) {
                 if(p && p.data != null && p.data.results!=null && p.data.results.length>0){
                     dt2.addColumn('number', p.name);
+                    nocols++;
                 }
              });
+            console.log($('#start_date').val());
+            dt2.addRow(addRow(nocols,$('#start_date').val()));
+            dt2.addRow(addRow(nocols,$('#end_date').val()));
             $.each(json.final, function(a,p) {
                 if(p && p.data != null && p.data.results!=null && p.data.results.length>0){
                     $.each(p.data.results, function(idx, obj) {
@@ -52,6 +57,16 @@
             $("#result").html();
         }
 
+        function addRow(numberofcolunm, mydate){
+             myrow = [];
+             myrow.push(new Date(mydate.substring(0,4)+'-'+mydate.substring(4,6)+'-'+mydate.substring(6,8)));
+                        for ( i = 0; i < numberofcolunm; i++){
+
+                                myrow.push(null);
+                        }
+             return myrow;
+
+        }
 
         function drawChart2(json) {
 
@@ -63,12 +78,18 @@
             dt2.addColumn('date', 'Date');
             console.log(json.final);
             var d = $("#druglist .btn-success .drug_name"); //list of drugs that are Clicked for Legend
+
+            nocols= 0;
             $.each(json.final, function(a,p) {
                 if(p){
                     console.log(p.name);
                     dt2.addColumn('number', p.name);
+                    nocols++;
                 }
              });
+
+             dt2.addRow(addRow(nocols,$('#start_date').val()));
+            dt2.addRow(addRow(nocols,$('#end_date').val()));
             $.each(json.final, function(a,p) {
                 if(p){
                     $.each(p.result, function(idx, obj) {
