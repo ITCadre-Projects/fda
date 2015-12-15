@@ -126,7 +126,9 @@ def retrieve_mentioned_event_twitter(drug_name, start_date=None, end_date=None, 
     return points
 
 def retrieve_latest_tweets(limit=None):
-     events = DataRecord.objects.filter(data_src__iexact="twitter")
+     print (DataRecord.objects.filter(data_src__iexact="twitter").order_by('-id').count())
+     events = DataRecord.objects.filter(data_src__iexact="twitter").order_by('-id')
+     print(events[0].raw_data)
      if limit:
          events = events[:limit]
      return events
