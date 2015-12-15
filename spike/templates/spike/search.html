@@ -163,6 +163,7 @@
 
 </head>
 <body>
+
 <div class="container">
 <h1 style="text-align:center;">Top Drug Interactions</h1>
 <div class="bs-docs-section">
@@ -182,7 +183,9 @@
         </div>
     
     <div id="showHideDrugs">...See More...</div>
-    
+
+    <bold>Top ten tweets</bold>
+        <div><textarea rows = 5000 id ="tweet_result"></textarea></div>
     </div>
 
 
@@ -231,7 +234,8 @@
             </div>
             <div id="result_errors2" class="text-danger"></div>
 
-            <div id="result2"></div>
+
+             <div id="result2"></div>
 </div>
 </div>
 </div>
@@ -410,6 +414,7 @@ function create_post() {
               drawChart(json);
               // alert(json);
                 searchTweets();
+                auto_display_tweets();
 
             },
 
@@ -423,9 +428,37 @@ function create_post() {
 
 };
 
+function displayTweets(){
+   //console.log('hhhhhhhhhhhhh');
+   $.ajax({
+    url : "/spike/get-latest-tweets/",
+    type: "GET",
+    dataType: "json",
+    data: {
+         csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+    success :function(json) {
+         $('#tweet_result').val("");
+         $.each(json.final, function(i,r){
+                //console.log(r.tweet);
+                $('#tweet_result').val( $('#tweet_result').val() + " " + r.tweet );
+            })
+
+
+
+    },
+
+})
+
+}
+
+function auto_display_tweets(){
+
+    var myInterval = window.setInterval(function() { displayTweets(); }, 5000);
+}
 function searchTweets() {
 
-  console.log("hey");
+
 $.ajax({
     url : "/spike/search-mentioned-events-twitter/",
     type: "GET",

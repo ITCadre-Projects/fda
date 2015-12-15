@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^$', views.search_form, name='search_form'),
     url(r'^search/$', views.search, name='search'),
     url(r'^get-drug-names/$', views.get_drug_names, name='get_drug_names'),
+    url(r'^get-latest-tweets/$', views.get_latest_tweets, name='get_latest_tweets'),
     url(r'^search-mentioned-events-twitter/$', views.search_mentioned_events_twitter,
         name='search_mentioned_events_twitter')
 ]

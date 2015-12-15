@@ -7,6 +7,7 @@ from .services import baseline_10_years
 from .services import retreive_drug_names
 from .services import search_by_product
 from .services import retrieve_mentioned_event_twitter
+from .services import retrieve_latest_tweets
 import json
 import datetime
 
@@ -82,8 +83,9 @@ def search(request):
                      my_result_dict['result'].append(my_record)
 
 
-                my_data_dict['final'].append(my_drug_dict)
+
                 my_drug_dict['data'] = my_result_dict
+                my_data_dict['final'].append(my_drug_dict)
             return JsonResponse(my_data_dict)
         else:
             return JsonResponse(data_points)
@@ -115,3 +117,18 @@ def search_mentioned_events_twitter(request):
 
         my_data_dict['final'].append(my_drug_dict)
     return JsonResponse(my_data_dict, safe=False)
+
+@api_view(['GET'])
+def get_latest_tweets(request):
+    limit = request.query_params.get('limit')
+    if limit:
+        my_limit = limit
+    else:
+        my_limit = 10
+    tweets = retrieve_latest_tweets(my_limit)
+    my_data_dict = {'final': []}
+
+    for event in tweets:
+        my_drug_dict = {'date': datetime.datetime.strftime(event.submitted_date, '%Y%m%d'), 'tweet': event.raw_data}
+        my_data_dict['final'].append(my_drug_dict)
+    return JsonResponse(my_data_dict)

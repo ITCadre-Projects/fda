@@ -124,3 +124,10 @@ def retrieve_mentioned_event_twitter(drug_name, start_date=None, end_date=None, 
         if len(points) > mylimit:
             points = points[:mylimit]
     return points
+
+def retrieve_latest_tweets(limit=None):
+     events = DataRecord.objects.filter(data_src__iexact="twitter")
+     if limit:
+         events = events[:limit]
+     return events
+
