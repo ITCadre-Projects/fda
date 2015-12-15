@@ -8,6 +8,7 @@ from .services import retreive_drug_names
 from .services import search_by_product
 from .services import retrieve_mentioned_event_twitter
 import json
+import datetime
 
 
 def index(request):
@@ -53,18 +54,37 @@ def search(request):
             result = {"hello": "waipang"}
 
             return JsonResponse(result)
-        elif three_d and three_d == "true" and interval and interval in ("byweek","bymonth","byyear"):
+        elif three_d and three_d == "true" and interval:
 
-            if interval == "byweek":
-                idays = 7
-            elif interval == "bymonth":
-                idays = 30
-            else:
-                idays = 365
+            my_data_dict = {'final': []}
 
-            result = {"hello2": "waipang"}
+            for drug in data_points['final']:
+                print(drug['data']['results'])
+                my_drug_dict = {'name':'', 'data':''}
+                my_drug_dict['name'] = drug['name']
 
-            return JsonResponse(result)
+                my_result_dict ={'result':[]}
+
+
+                my_date = start_date
+                while my_date <= end_date:
+                     my_record ={'date':'', 'count':''}
+                     my_count = 0
+                     old_my_date = my_date
+                     my_date2 = datetime.datetime.strptime(my_date, '%Y%m%d')
+                     my_date2 = my_date2 + datetime.timedelta(days=int(interval))
+                     my_date = datetime.datetime.strftime(my_date2,'%Y%m%d')
+                     for d in drug['data']['results']:
+                         if d['time'] <= my_date and d['time'] > old_my_date:
+                            my_count = my_count + d['count']
+                     my_record['date']=my_date
+                     my_record['count'] = my_count
+                     my_result_dict['result'].append(my_record)
+
+
+                my_data_dict['final'].append(my_drug_dict)
+                my_drug_dict['data'] = my_result_dict
+            return JsonResponse(my_data_dict)
         else:
             return JsonResponse(data_points)
     else:
