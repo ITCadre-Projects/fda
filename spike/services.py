@@ -88,41 +88,43 @@ def retreive_drug_names(count=None):
 
 def retrieve_mentioned_event_twitter(drug_name, start_date=None, end_date=None, limit=None):
     points = []
-
-    my_data_dict = {'final': []}
-    my_drugs = drug_name.split(',')
-    drug_txt = ''
-    for my_drug in my_drugs:
-        my_drug_dict = {'name': my_drug, 'result': []}
-        my_data_dict['final'].append(my_drug_dict)
-        drug_txt = drug_txt + " " + my_drug
+    events = DataRecord.objects.filter(data_src__iexact="twitter")
     if limit:
         mylimit = int(limit)
     else:
         mylimit = 10
 
-    sdate = datetime.datetime.strptime(start_date, '%Y%m%d')
-    edate = datetime.datetime.strptime(end_date, '%Y%m%d')
+    if events and len(events) > 0:
+        if drug_name:
+            events = events.filter(raw_data__icontains=drug_name)
+        if start_date:
+            sdate = datetime.datetime.strptime(start_date, '%Y%m%d')
+            events = events.filter(submitted_date__gte=sdate)
+        if end_date:
+            edate = datetime.datetime.strptime(end_date, '%Y%m%d')
+            events = events.filter(submitted_date__lte=edate)
 
-    events = DataRecord.objects.filter(data_src__iexact="twitter").filter(
-            submitted_date__gte=sdate).filter(submitted_date__lte=edate)
+        if len(events) > 0:
+            pre_date = events[0].submitted_date
+            mycount = 0
+            index = 0
+            for event in events:
+                if index >= 1 and event.submitted_date > pre_date:
+                    point = DataPoint(filed_date=pre_date, drug_name=drug_name, count=mycount)
+                    points.append(point)
+                    mycount = 1
+                    pre_date = event.submitted_date
+                elif index == (len(events) - 1):
+                    point = DataPoint(filed_date=event.submitted_date, drug_name=drug_name, count=mycount + 1)
+                    points.append(point)
+                else:
+                    mycount = mycount + 1
+                index = index + 1
 
+        if len(points) > mylimit:
+            points = points[:mylimit]
 
-    for event in events:
-        for my_drug in my_drugs:
-            if my_drug in event.raw_data:
-                for d in my_data_dict['final']:
-                    if d['name'] == my_drug:
-                        if len(d['result']) > 0 and d['result'][len(d['result']) - 1][
-                            'submitted_date'] == event.submitted_date:
-                            d['result'][len(d['result']) - 1]['count'] = d['result'][len(d['result']) - 1][
-                                                                             'count'] + 1
-                        else:
-                            d['result'].append({'submitted_date': event.submitted_date, 'count': 1})
-
-    return my_data_dict
-
-
+    return points
 def retrieve_latest_tweets(limit=None):
     print(DataRecord.objects.filter(data_src__iexact="twitter").order_by('-id').count())
     events = DataRecord.objects.filter(data_src__iexact="twitter").order_by('-id')
