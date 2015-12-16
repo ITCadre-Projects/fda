@@ -105,8 +105,18 @@ def search_mentioned_events_twitter(request):
     end_date = request.query_params.get('end_date')
     limit = request.query_params.get('limit')
 
+    my_data_dict = {'final': []}
+    my_drugs = drug_name.split(',')
 
-    return JsonResponse(retrieve_mentioned_event_twitter(drug_name, start_date, end_date, limit), safe=False)
+    for my_drug in my_drugs:
+        my_drug_dict = {'name':my_drug, 'result': []}
+        events = retrieve_mentioned_event_twitter(my_drug, start_date, end_date, limit)
+        for event in events:
+            mye = {"count": event.count, "submitted_date": event.filed_date}
+            my_drug_dict['result'].append(mye)
+
+        my_data_dict['final'].append(my_drug_dict)
+    return JsonResponse(my_data_dict, safe=False)
 
 @api_view(['GET'])
 def get_latest_tweets(request):
