@@ -28,10 +28,13 @@ class StdOutListener(StreamListener):
         if "text" in data and "source" in data :
             tweet = data.split(',"text":"')[1].split('","source')[0]
             today = datetime.datetime.today()
-            d = DataRecord(raw_data=tweet, data_src='twitter', submitted_date=today)
-            d.save()
-            print(tweet)
-            print('data saved')
+            try:
+                d = DataRecord(raw_data=tweet, data_src='twitter', submitted_date=today)
+                d.save()
+            except:
+                print(" this message "+tweet+"  skipped")
+            # print(tweet)
+            # print('data saved')
         else:
             print('bad data')
         return True
