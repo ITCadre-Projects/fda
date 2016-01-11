@@ -9,6 +9,13 @@
 <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
 <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
 <link rel="stylesheet" href="http://css-spinners.com/css/spinners.css" type="text/css">
+  {% load staticfiles %}
+
+  <script type="text/javascript" src="{% static "js/threegraphs/lib/three.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/threegraphs/lib/TrackballControls.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/threegraphs/lib/TrackballControlsTouch.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/threegraphs/src/threegraphs.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/threegraphs/fonts/helvetiker.js" %}"></script>
 
     <script type="text/javascript">
 
@@ -159,85 +166,132 @@
 #drugList {
     margin-top:10px;
 }
+#ThreeDdiv {
+    display:none;
+}
+
+#threegraphs-valuelable {
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+      position: absolute;
+      top: 200px;
+      left: 500px;
+      z-index: 9;
+      font-size: 16px;
+      display: none;
+      padding: 10px;
+      background: #26272b;
+      border: 1px solid #fff;
+    }
     </style>
 
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="2Ddrugs">
 <h1 style="text-align:center;">Top Drug Interactions</h1>
-<div class="bs-docs-section">
-<div class="row">
-    <div id="drugs" class="col-md-2">
-    Top 20 Drugs Reported: 
-    <div class="input-group add-on">
-      <input type="text" class="form-control" placeholder="Search Drugs" name="srch-term" id="seachDrugName" style="padding-left:5px;">
-      <div class="input-group-btn">
-        <button class="form-control btn btn-default" type="submit"><i class="glyphicon glyphicon-search" id="searchDrug"></i></button>
-      </div>
-    </div>
+    <div class="bs-docs-section">
 
-           
+        <div class="row" >
+            <div id="drugs" class="col-md-2">
+            Top 20 Drugs Reported: 
+            <div class="input-group add-on">
+              <input type="text" class="form-control" placeholder="Search Drugs" name="srch-term" id="seachDrugName" style="padding-left:5px;">
+              <div class="input-group-btn">
+                <button class="form-control btn btn-default" type="submit"><i class="glyphicon glyphicon-search" id="searchDrug"></i></button>
+              </div>
+            </div>
 
-        <div id="drugList" class="btn-group-vertical">
-        </div>
-    
-    <div id="showHideDrugs">...See More...</div>
+                   
 
-    <bold>Top ten tweets</bold>
-        <div><textarea rows = 5000 id ="tweet_result"></textarea></div>
-    </div>
-
-
-    <div id="drugs" class="col-lg-10">
-
-            <form class="form-horizontal" action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
-              <fieldset>
-                <div class="form-group">
-                    <input type="hidden" id="drug_name" name="drug_name" value="Tylenol">
-                    <input type="hidden" name="start_date" id="start_date" value="20140101">
-
-                    <input type="hidden" name="end_date" id="end_date" value="20150101">
-                    <label for="dateRange" class="col-lg-2 control-label">Date Range:</label>
-                    <div class="col-lg-3">
-                        <input type="text" class="form-control" name="dateRange" id="dateRange" value="">
-                        
-                    </div>
+                <div id="drugList" class="btn-group-vertical">
                 </div>
+            
+            <div id="showHideDrugs">...See More...</div>
+
+            <bold>Top ten tweets</bold>
+                <div><textarea rows ="50" id="tweet_result" style="max-height:500px;min-height:500px;overflow-y=scroll;"></textarea></div>
+            </div>
 
 
-                <div class="form-group">
-                    <div class="col-lg-10 col-lg-offset-2">
-                        <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
-                        <div id="error">
-                            
+            <div id="drugs" class="col-lg-10">
+
+                    <form class="form-horizontal" action="/spike/search/" method="post" id="searchForm">{% csrf_token %}
+                      <fieldset>
+                        <div class="form-group">
+                            <input type="hidden" id="drug_name" name="drug_name" value="Tylenol">
+                            <input type="hidden" name="start_date" id="start_date" value="20140101">
+
+                            <input type="hidden" name="end_date" id="end_date" value="20150101">
+                            <label for="dateRange" class="col-lg-2 control-label">Date Range:</label>
+                            <div class="col-lg-3">
+                                <input type="text" class="form-control" name="dateRange" id="dateRange" value="">
+                                
+                            </div>
+                            <div class="col-lg-3" style="float:right; cursor:pointer;" id="show3d">
+                                Show in 3D
+                                <img src="{% static "img/3d.png" %}" alt="My image"/>
+
+                            </div>
                         </div>
 
-                    </div>
-                </div>
-              </fieldset>
-            </form>
-            <div style="text-align:center; margin-top:50px;">
-                <div id="loading" class="spinner-loader">
-                  Loading…
-                </div>
+
+                        <div class="form-group">
+                            <div class="col-lg-10 col-lg-offset-2">
+                                <a href="javascript:void(0)" class="btn btn-primary btn-sm" id="submitForm">Search</a>
+                                <div id="error">
+                                    
+                                </div>
+
+                            </div>
+                        </div>
+                      </fieldset>
+                    </form>
+
+                        <div style="text-align:center; margin-top:50px;">
+                            <div id="loading" class="spinner-loader">
+                              Loading…
+                            </div>
+                        </div>
+                        <div id="result_errors" class="text-danger"></div>
+                        
+                        <div id="result"></div>
+
+
+                       <div style="text-align:center; margin-top:50px;">
+                            <div id="loading2" class="spinner-loader">
+                              Loading…
+                            </div>
+                        </div>
+                        <div id="result_errors2" class="text-danger"></div>
+
+
+                        <div id="result2"></div>
+
+
+
+                   
+
             </div>
-            <div id="result_errors" class="text-danger"></div>
-            
-            <div id="result"></div>
+        </div>
 
 
-           <div style="text-align:center; margin-top:50px;">
-                <div id="loading2" class="spinner-loader">
-                  Loading…
-                </div>
+
+    </div>
+</div>
+
+<div class="container" id="ThreeDdiv">
+<h1 style="text-align:center;">Top Drug Interactions</h1>
+    <div class="bs-docs-section">
+
+        <div class="row" >
+            <div class="col-lg-3" style="float:right;cursor:pointer;" id="show2d">
+                Show 2D plot Chart  <img src="{% static "img/2d.png" %}" alt="My image" style="height:30px;"/>
             </div>
-            <div id="result_errors2" class="text-danger"></div>
-
-
-             <div id="result2"></div>
-</div>
-</div>
+            <div id="threegraphs-valuelable">
+            </div>
+        </div>
+    </div>
 </div>
 <script>
 $(document).ready(function(){
@@ -284,7 +338,93 @@ $(document).ready(function(){
     
 
     get_drugs();
+
+   
+
+
+      $("#show3d").click(function(){
+            getThreeD();
+        });
+      $("#show2d").click(function(){
+        $("#ThreeDdiv").hide();
+        $("#2Ddrugs").toggle();
+      })
+
 });
+
+function getThreeD() {
+
+    $("#ThreeDdiv").show();
+    $("#2Ddrugs").toggle();
+    var searchString = "/spike/search/?drug_name=";
+    $(".glyphicon-minus span").each(function(){
+        searchString += $(this).text() + ",";
+    });
+
+    searchString += "&start_date=" + $('#start_date').val() + "&end_date=" + $('#end_date').val() + "&3d=true&interval=10";
+     $.ajax({
+            url : searchString,
+            type: "GET",
+            dataType: "json",
+            success :function(json) {
+                
+
+                 
+/*                $.each(json.final, function(i,result){
+                   console.log(result.name);
+                   
+                  
+                })*/
+                draw3dgraph(json);
+            
+            }
+        })
+}
+
+function draw3dgraph(json){
+    /*********************3D Graph ************************/
+    colors = ["990000","003399","006600","ffCC00","666699","ff6633","ccccff","cccc99","996633","CCCCCC","cc0000","0066FF","00CC00","FFFF33","990066"];
+     THREEGRAPHS.Settings.staticUrl = '{% static "img/" %}';
+      var cols = [];
+      var rows = [];
+      var dateArr = {};
+
+      $.each(json.final, function(a,p) {
+            cols.push({name: p.name, color:colors[a]});
+            //console.log(p.data.result);
+            $.each(p.data.result, function(i,r) {
+                if (a==0) {dateArr[r.date]=[];}
+                dateArr[r.date].push(r.count);
+            })    
+
+        });
+      
+      //console.log(dateArr);
+      $.each(dateArr, function(k,i) {
+         rows.push({name: k, values: i});
+      });
+       
+
+
+      console.log(rows);
+      var sampleData = {cols,rows};
+/*      var sampleData = { 
+        cols: [ { name:"col1", color:colors[i] }, 
+                 { name:"col2", color:"00CC00" },
+                 { name:"col3", color:"0000CC" }
+               ],
+
+
+        rows: [ { name: "row 1", values: [5,6,12] }, 
+                { name: "row 2", values: [0.5,9,3] }
+               ]
+      };*/
+    
+      var newBarChart = new THREEGRAPHS.BarChart ( sampleData );
+      newBarChart.init();
+}
+
+
 function swapDrug(elem) {
     $(elem).toggleClass("btn-success .btn-default").find("> span").toggleClass("glyphicon-minus glyphicon-plus");
 }
@@ -315,7 +455,7 @@ function get_drugs() {
             console.log("number of results: " + json.results.length); //number of drugs
             $.each(json.results, function(i,result){
                 var href = $('<a>', {href:'javascript:void(0)',id:result.term, 'class':'btn btn-default btn-sm'});
-                var glyph = $('<span>', {'class':'glyphicon glyphicon-minus','aria-hidden':'true'});
+                var glyph = $('<span>', {'class':'glyphicon glyphicon-plus','aria-hidden':'true'});
                 var drugSpan = $('<span>', {'class':'drug_name'});
                 $("#drugList").append(href.append(glyph.append(drugSpan.append(result.term))));
             })
